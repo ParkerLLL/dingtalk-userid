@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>获取钉钉 UserId</title>
+    <script src="https://g.alicdn.com/dingding/dingtalk-jsapi/2.10.3/dingtalk.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .info {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .code-box {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        button {
+            background: #0089ff;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #0077dd;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>获取钉钉 UserId</h1>
+
+        <div class="info">
+            <strong>说明:</strong> 此页面需要在钉钉内打开，会自动获取你的 authCode
+        </div>
+
+        <button onclick="getAuthCode()">点击获取 AuthCode</button>
+
+        <div id="result" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        dd.ready(function() {
+            console.log('DingTalk JS-API Ready');
+        });
+
+        function getAuthCode() {
+            dd.runtime.permission.requestAuthCode({
+                corpId: "dingdc4bd442a4ad9cd84ac5d6980864d335",
+                onSuccess: function(result) {
+                    const authCode = result.code;
+                    console.log('AuthCode:', authCode);
+
+                    document.getElementById('result').innerHTML = `
+                        <div class="info">
+                            <h3>成功获取 AuthCode!</h3>
+                            <div class="code-box" id="authCodeBox">
+                                ${authCode}
+                            </div>
+                            <button onclick="copyAuthCode()">复制 AuthCode</button>
+                            <p style="margin-top: 15px; font-size: 14px;">
+                                <strong>下一步:</strong><br>
+                                1. 复制上面的 AuthCode<br>
+                                2. 回到命令行运行脚本<br>
+                                3. 选择方式2，粘贴 AuthCode
+                            </p>
+                        </div>
+                    `;
+                },
+                onFail: function(err) {
+                    console.error('获取失败:', err);
+                    document.getElementById('result').innerHTML = `
+                        <div class="error">
+                            <h3>获取失败</h3>
+                            <p>错误信息: ${JSON.stringify(err)}</p>
+                            <p>请确保:</p>
+                            <ul>
+                                <li>在钉钉内打开此页面</li>
+                                <li>CorpId 配置正确</li>
+                                <li>应用已发布并可见</li>
+                            </ul>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        function copyAuthCode() {
+            const authCode = document.getElementById('authCodeBox').innerText;
+            navigator.clipboard.writeText(authCode).then(function() {
+                alert('AuthCode 已复制到剪贴板!');
+            });
+        }
+    </script>
+</body>
+</html>
