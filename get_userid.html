@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>获取钉钉 UserId</title>
+    <title>获取钉钉 UserId（调试版）</title>
     <script src="https://g.alicdn.com/dingding/dingtalk-jsapi/2.10.3/dingtalk.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
             max-width: 600px;
-            margin: 50px auto;
+            margin: 20px auto;
             padding: 20px;
             background: #f5f5f5;
         }
@@ -22,12 +22,22 @@
         h1 {
             color: #333;
             text-align: center;
+            font-size: 24px;
         }
         .info {
             background: #e8f4f8;
             padding: 15px;
             border-radius: 5px;
-            margin: 20px 0;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+        .debug {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            font-size: 13px;
+            border-left: 4px solid #ffc107;
         }
         .code-box {
             background: #f9f9f9;
@@ -36,6 +46,7 @@
             border-radius: 5px;
             font-family: monospace;
             word-break: break-all;
+            font-size: 12px;
         }
         button {
             background: #0089ff;
@@ -56,62 +67,186 @@
             color: #c62828;
             padding: 15px;
             border-radius: 5px;
-            margin: 20px 0;
+            margin: 15px 0;
+        }
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>获取钉钉 UserId</h1>
+        <h1>🔧 获取钉钉 UserId（调试版）</h1>
 
         <div class="info">
-            <strong>说明:</strong> 此页面需要在钉钉内打开，会自动获取你的 authCode
+            <strong>📱 使用说明:</strong><br>
+            1. 必须在钉钉内打开（工作台应用或内置浏览器）<br>
+            2. 点击下方按钮检测环境<br>
+            3. 如果环境正常，会自动获取 AuthCode
         </div>
 
-        <button onclick="getAuthCode()">点击获取 AuthCode</button>
+        <button onclick="checkEnvironment()">1️⃣ 检测钉钉环境</button>
+        <button onclick="getAuthCode()" style="margin-top: 10px;">2️⃣ 获取 AuthCode</button>
 
+        <div id="debug" style="margin-top: 20px;"></div>
         <div id="result" style="margin-top: 20px;"></div>
     </div>
 
     <script>
+        let debugInfo = [];
+
+        function log(message) {
+            debugInfo.push(message);
+            updateDebugDisplay();
+        }
+
+        function updateDebugDisplay() {
+            const debugDiv = document.getElementById('debug');
+            debugDiv.innerHTML = `
+                <div class="debug">
+                    <strong>🔍 调试信息:</strong><br>
+                    ${debugInfo.map(msg => `• ${msg}`).join('<br>')}
+                </div>
+            `;
+        }
+
+        // 页面加载时自动检测
+        window.onload = function() {
+            log('页面加载完成');
+            log('User Agent: ' + navigator.userAgent);
+
+            // 检测是否在钉钉内
+            if (navigator.userAgent.indexOf('DingTalk') !== -1) {
+                log('✅ 检测到钉钉环境');
+            } else {
+                log('❌ 未检测到钉钉环境 - 请在钉钉内打开');
+            }
+        };
+
+        // 钉钉 JSAPI 就绪
         dd.ready(function() {
-            console.log('DingTalk JS-API Ready');
+            log('✅ 钉钉 JSAPI 加载成功');
+            log('dd 对象可用: ' + (typeof dd !== 'undefined'));
         });
 
+        dd.error(function(error) {
+            log('❌ 钉钉 JSAPI 错误: ' + JSON.stringify(error));
+        });
+
+        function checkEnvironment() {
+            log('开始环境检测...');
+
+            // 检查 1: User Agent
+            const ua = navigator.userAgent;
+            if (ua.indexOf('DingTalk') !== -1) {
+                log('✅ User Agent 包含 DingTalk');
+            } else {
+                log('❌ User Agent 不包含 DingTalk');
+                log('当前 UA: ' + ua);
+            }
+
+            // 检查 2: dd 对象
+            if (typeof dd !== 'undefined') {
+                log('✅ dd 对象存在');
+                log('dd.version: ' + (dd.version || '未知'));
+                log('dd.android: ' + (dd.android ? '是' : '否'));
+                log('dd.ios: ' + (dd.ios ? '是' : '否'));
+            } else {
+                log('❌ dd 对象不存在');
+            }
+
+            // 检查 3: runtime 对象
+            if (typeof dd !== 'undefined' && dd.runtime) {
+                log('✅ dd.runtime 对象存在');
+            } else {
+                log('❌ dd.runtime 对象不存在');
+            }
+
+            // 检查 4: requestAuthCode 方法
+            if (typeof dd !== 'undefined' && dd.runtime && dd.runtime.permission && dd.runtime.permission.requestAuthCode) {
+                log('✅ requestAuthCode 方法可用');
+
+                document.getElementById('result').innerHTML = `
+                    <div class="success">
+                        <h3>✅ 环境检测通过！</h3>
+                        <p>你的环境支持获取 AuthCode，点击下方按钮继续。</p>
+                    </div>
+                `;
+            } else {
+                log('❌ requestAuthCode 方法不可用');
+
+                document.getElementById('result').innerHTML = `
+                    <div class="error">
+                        <h3>❌ 环境检测失败</h3>
+                        <p><strong>问题:</strong> 当前环境不支持获取 AuthCode</p>
+                        <p><strong>原因:</strong> 可能不在钉钉内置浏览器中打开</p>
+                        <p><strong>解决方法:</strong></p>
+                        <ul>
+                            <li>确保从钉钉工作台打开（而非外部浏览器）</li>
+                            <li>或在钉钉聊天中发送链接并点击</li>
+                            <li>或使用钉钉扫一扫功能</li>
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+
         function getAuthCode() {
+            log('开始获取 AuthCode...');
+
+            if (typeof dd === 'undefined') {
+                log('❌ dd 对象不存在，无法继续');
+                alert('错误: 钉钉 JSAPI 未加载，请确保在钉钉内打开');
+                return;
+            }
+
+            const corpId = "dingdc4bd442a4ad9cd84ac5d6980864d335";
+            log('使用 CorpId: ' + corpId);
+
             dd.runtime.permission.requestAuthCode({
-                corpId: "dingdc4bd442a4ad9cd84ac5d6980864d335",
+                corpId: corpId,
                 onSuccess: function(result) {
                     const authCode = result.code;
-                    console.log('AuthCode:', authCode);
+                    log('✅ 成功获取 AuthCode: ' + authCode.substring(0, 20) + '...');
 
                     document.getElementById('result').innerHTML = `
-                        <div class="info">
-                            <h3>成功获取 AuthCode!</h3>
-                            <div class="code-box" id="authCodeBox">
-                                ${authCode}
+                        <div class="success">
+                            <h3>🎉 成功获取 AuthCode!</h3>
+                            <div class="code-box" id="authCodeBox">${authCode}</div>
+                            <button onclick="copyAuthCode()">📋 复制 AuthCode</button>
+                            <div class="info" style="margin-top: 15px;">
+                                <strong>📝 下一步:</strong><br>
+                                1. 点击上方按钮复制 AuthCode<br>
+                                2. 回到命令行运行: <code>python get_userid_免登录方案.py</code><br>
+                                3. 选择方式 2，粘贴 AuthCode<br>
+                                4. 获取 UserId 并测试数据采集
                             </div>
-                            <button onclick="copyAuthCode()">复制 AuthCode</button>
-                            <p style="margin-top: 15px; font-size: 14px;">
-                                <strong>下一步:</strong><br>
-                                1. 复制上面的 AuthCode<br>
-                                2. 回到命令行运行脚本<br>
-                                3. 选择方式2，粘贴 AuthCode
-                            </p>
                         </div>
                     `;
                 },
                 onFail: function(err) {
-                    console.error('获取失败:', err);
+                    log('❌ 获取失败: ' + JSON.stringify(err));
+
                     document.getElementById('result').innerHTML = `
                         <div class="error">
-                            <h3>获取失败</h3>
-                            <p>错误信息: ${JSON.stringify(err)}</p>
-                            <p>请确保:</p>
+                            <h3>❌ 获取 AuthCode 失败</h3>
+                            <p><strong>错误信息:</strong></p>
+                            <div class="code-box">${JSON.stringify(err, null, 2)}</div>
+                            <p><strong>可能原因:</strong></p>
                             <ul>
-                                <li>在钉钉内打开此页面</li>
-                                <li>CorpId 配置正确</li>
-                                <li>应用已发布并可见</li>
+                                <li>CorpId 配置错误</li>
+                                <li>应用未发布或未设置可见</li>
+                                <li>用户无权限访问此应用</li>
+                            </ul>
+                            <p><strong>解决方法:</strong></p>
+                            <ul>
+                                <li>检查 CorpId 是否正确: dingdc4bd442a4ad9cd84ac5d6980864d335</li>
+                                <li>确认应用已在钉钉开放平台发布</li>
+                                <li>确认应用可见范围包含你</li>
                             </ul>
                         </div>
                     `;
@@ -121,9 +256,34 @@
 
         function copyAuthCode() {
             const authCode = document.getElementById('authCodeBox').innerText;
-            navigator.clipboard.writeText(authCode).then(function() {
-                alert('AuthCode 已复制到剪贴板!');
-            });
+
+            // 尝试复制到剪贴板
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(authCode).then(function() {
+                    alert('✅ AuthCode 已复制到剪贴板!');
+                    log('✅ AuthCode 已复制');
+                }).catch(function(err) {
+                    log('❌ 复制失败: ' + err);
+                    // 降级方案：显示选择文本
+                    selectText('authCodeBox');
+                    alert('请手动复制上方高亮的 AuthCode');
+                });
+            } else {
+                // 降级方案
+                selectText('authCodeBox');
+                alert('请手动复制上方高亮的 AuthCode');
+            }
+        }
+
+        function selectText(elementId) {
+            const element = document.getElementById(elementId);
+            if (window.getSelection && document.createRange) {
+                const selection = window.getSelection();
+                const range = document.createRange();
+                range.selectNodeContents(element);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
         }
     </script>
 </body>
